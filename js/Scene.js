@@ -61,7 +61,7 @@ var Scene = {
                 parentCell: undefined
             }])
             if (this.isCellEq(posFrom, posTo)) {
-                return posFrom;
+                return [posFrom];
             }
         }
         // Состовляем список точек поиска для предыдущего шага
@@ -79,7 +79,9 @@ var Scene = {
             }
         }
         path.push(newCells);
-        if (path.length  > 30){
+        console.log('Шаг', path.length);
+        if (path.length  > 15){
+            alert('Алгоритм поиска пути долго работает с путями длиннее 15ти клеток');
             return false;
         }
         return this.getRoadmap(posFrom, posTo, path);

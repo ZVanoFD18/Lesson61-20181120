@@ -74,13 +74,20 @@ var App = {
     },
     setHosesPosRandom(){
         this.house1pos = this.getPosCell(
-            Math.floor(Math.random() * Scene.width),
-            Math.floor(Math.random() * Scene.height))
+            Math.max(0, Math.floor(Math.random() * Scene.width - 3)),
+            Math.max(0,Math.floor(Math.random() * Scene.height - 6)))
         ;
         this.house2pos = this.getPosCell(
-            Math.floor(Math.random() * Scene.width),
-            Math.floor(Math.random() * Scene.height))
+            Math.max(0, Math.floor(Math.random() * Scene.width - 3)),
+            Math.max(0,Math.floor(Math.random() * Scene.height - 6)))
         ;
+        // @TODO: DEBUG/ позиция выхода из дома за пределами поля
+        // this.house1pos = this.getPosCell(7, 6);
+        // this.house2pos = this.getPosCell(8, 8);
+
+        // this.house1pos = this.getPosCell(5, 0);
+        // this.house2pos = this.getPosCell(21, 5);
+
         console.log('Новая позиция дома1', this.house1pos);
         console.log('Новая позиция дома2', this.house2pos);
     },
