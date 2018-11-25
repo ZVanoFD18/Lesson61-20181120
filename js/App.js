@@ -16,6 +16,8 @@ var App = {
     spriteH : 32,
     spriteGrass : {},
     mapHouse : [],
+    house1pos : undefined,
+    house2pos : undefined,
     /**
      * @type {{x: *, y: *}}
      */
@@ -36,7 +38,14 @@ var App = {
             [this.getPosCell(0, 1), this.getPosCell(1, 1), this.getPosCell(2, 1)],
             [this.getPosCell(2, 3), this.getPosCell(1, 2), this.getPosCell(2, 3)],
             [this.getPosCell(2, 3), this.getPosCell(1, 3), this.getPosCell(2, 3)]
-        ]
+        ];
+        this.house1pos = this.getPosCell(1, 1);
+        this.house2pos = this.getPosCell(3, 5);
+        document.querySelector('#buttonNewPos').onclick = ()=>{
+            // alert('newPos');
+            this.setHosesPosRandom();
+            this._run();
+        }
     },
     run(){
         App._init();
@@ -45,10 +54,8 @@ var App = {
         }
     },
     _run(){
-        let house1pos = this.getPosCell(1, 3),
-            house2pos = this.getPosCell(15, 7),
-            roadPos1 = this.getCPosHouseRoadPoint(house1pos),
-            roadPos2 = this.getCPosHouseRoadPoint(house2pos)
+        let roadPos1 = this.getCPosHouseRoadPoint(this.house1pos),
+            roadPos2 = this.getCPosHouseRoadPoint(this.house2pos)
         ;
         Scene.init();
         // Scene.setCell(this.getPosCell(0, 0), this.getPosCell(0, 0));
@@ -57,9 +64,25 @@ var App = {
         // Scene.setCell(roadPos1, this.spriteRoad);
         // Scene.setCell(roadPos2, this.spriteRoad);
 
-        Scene.setMatrix(this.mapHouse, house1pos);
-        Scene.setMatrix(this.mapHouse, house2pos);
+        Scene.setMatrix(this.mapHouse, this.house1pos);
+        Scene.setMatrix(this.mapHouse, this.house2pos);
+        var roadmap = Scene.getRoadmap(roadPos1, roadPos2);
+        if (false !== roadmap){
+            Scene.setList(roadmap, this.spriteRoad);
+        }
         Scene.draw();
+    },
+    setHosesPosRandom(){
+        this.house1pos = this.getPosCell(
+            Math.floor(Math.random() * Scene.width),
+            Math.floor(Math.random() * Scene.height))
+        ;
+        this.house2pos = this.getPosCell(
+            Math.floor(Math.random() * Scene.width),
+            Math.floor(Math.random() * Scene.height))
+        ;
+        console.log('Новая позиция дома1', this.house1pos);
+        console.log('Новая позиция дома2', this.house2pos);
     },
     /**
      * Возвращет координаты страйта, завернутые в объект

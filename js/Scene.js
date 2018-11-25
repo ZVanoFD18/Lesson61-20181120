@@ -1,8 +1,8 @@
 'use strict';
 var Scene = {
-    width : 0,
-    height : 0,
-    cells : [],
+    width: 0,
+    height: 0,
+    cells: [],
     init() {
         this.width = Math.floor(App.canvas.width / App.spriteW);
         this.height = Math.floor(App.canvas.height / App.spriteH);
@@ -13,7 +13,7 @@ var Scene = {
             }
         }
     },
-    draw(){
+    draw() {
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
                 this.drawCell(App.getPosCell(x, y), this.cells[x][y])
@@ -44,28 +44,126 @@ var Scene = {
         }
         App.ctx.stroke();
     },
-    drawCellsPosition(cell){
+    drawCellsPosition(cell) {
         let cellPosPx = App.getPosPx(cell);
         App.ctx.font = "10px Courier New";
         App.ctx.fillStyle = "#cccccc";
         App.ctx.fillText('' + cell.x + ':' + cell.y, cellPosPx.x, cellPosPx.y + 8);
     },
-    setCell(posCanvas, posTSet){
+    setCell(posCanvas, posTSet) {
         this.cells[posCanvas.x][posCanvas.y] = posTSet;
     },
-    getRoadmap(fromX, fromY, toX, toY) {
-        var roadmap = [];
-        for (var x = fromX; x <= toX; x++) {
-            // for (var y = fromY; y <= toY; y++) {
-            //     roadmap.push(App.getPosCell(x, y));
-            // }
-            roadmap.push(App.getPosCell(
-                x,
-                fromY + Math.floor((toY - fromY)/fromX + Math.floor((toX - x)/x))
-            ));
+    getRoadmap(posFrom, posTo, path) {
+        if (undefined === path) {
+            path = [];
+            path.push([{
+                cell: posFrom,
+                parentCell: undefined
+            }])
+            if (this.isCellEq(posFrom, posTo)) {
+                return posFrom;
+            }
         }
-        return roadmap;
+        // Состовляем список точек поиска для предыдущего шага
+        var listNewPosCheck = getCheckCells.call(this, path[path.length - 1]);
+        // Выход, если для текущего шага нет точек поиска.
+        if (listNewPosCheck.length < 1) {
+            return false;
+        }
+        let newCells = [];
+        for (let i = 0; i < listNewPosCheck.length; i++) {
+            if (this.isCellEq(posTo, listNewPosCheck[i].cell)) {
+                return getPath(listNewPosCheck[i]);
+            } else {
+                newCells.push(listNewPosCheck[i]);
+            }
+        }
+        path.push(newCells);
+        if (path.length  > 30){
+            return false;
+        }
+        return this.getRoadmap(posFrom, posTo, path);
+
+        function getCheckCells(listCells) {
+            let result = [];
+            listCells.forEach((parentCell) => {
+                let newCellsRaw = [
+                    App.getPosCell(parentCell.cell.x - 1, parentCell.cell.y)
+                    , App.getPosCell(parentCell.cell.x + 1, parentCell.cell.y)
+                    , App.getPosCell(parentCell.cell.x, parentCell.cell.y - 1)
+                    , App.getPosCell(parentCell.cell.x, parentCell.cell.y + 1)
+                ];
+                newCellsRaw.forEach((newCell) => {
+                    if (this.isCellInField(newCell)) {
+                        if(this.isCellFree(newCell)){
+                            if (!isCellInParent.call(this, newCell)) {
+                                result.push({
+                                    cell: newCell,
+                                    parentCell: parentCell
+                                });
+                            }
+                        }
+                    }
+                });
+            });
+            return result;
+        }
+        function isCellInParent(cell){
+            for (let i = path.length - 1; i >= 0; i--) {
+                for (let n = path[i].length - 1; n >= 0; n--) {
+                    if (this.isCellEq(cell, path[i][n].cell)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Возвращает путь для ноды. От ноды до корня.
+         * @param node
+         * @returns {Array}
+         */
+        function getPath(node) {
+            let result = [];
+            do{
+                result.push(node.cell);
+                node = node.parentCell;
+            }while (node !== undefined)
+            return result;
+        }
+
+        return false;
     },
+    isCellInField(cell) {
+        if (cell.x < 0 || cell.y < 0) {
+            return false;
+        } else if (cell.x > this.width - 1 || cell.y > this.height - 1) {
+            return false;
+        }
+        return true;
+    },
+    isCellEq(cell1, cell2) {
+        return cell1.x === cell2.x && cell1.y === cell2.y
+    },
+    isCellIn(cell, list) {
+        for (let i = list.length - 1; i >= 0; i--) {
+            if (this.isCellEq(cell, list[i])) {
+                return true
+            }
+        }
+        return false;
+    },
+    isCellFree(cell) {
+        let tSetCell =  this.cells[cell.x][cell.y];
+        if (this.isCellEq(tSetCell, App.spriteBackground)
+            || this.isCellEq(tSetCell, App.spriteRoad)
+        ) {
+            return true;
+        }
+        return false;
+    }
+    ,
     setMatrix(matrix, posCanvas) {
         matrix.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
@@ -73,9 +171,9 @@ var Scene = {
             })
         });
     },
-    drawSprites(tsetX, tsetY, cells) {
-        cells.forEach((cellPos) => {
-            this.drawSprite(cellPos.x, cellPos.y, tsetX, tsetY);
+    setList(list, posTSet) {
+        list.forEach((posCanvas) => {
+            this.setCell(posCanvas, posTSet);
         });
     }
 }
