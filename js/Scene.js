@@ -1,74 +1,81 @@
 'use strict';
-var scene = {
+var Scene = {
     width : 0,
     height : 0,
-    cells : 0,
-    cellBackground : undefined,
+    cells : [],
     init() {
-        this.cellBackground =
-    },
-    drawCells() {
-        ctx.strokeStyle = '#cccccc';
-        ctx.beginPath();
-        for (var x = 0; x < Math.floor(canvas.width / spriteW); x++) {
-            ctx.moveTo(x * spriteW, 0);
-            ctx.lineTo(x * spriteW, canvas.height);
-            ctx.moveTo(0, x * spriteW, 0);
-            ctx.lineTo(canvas.width, x * spriteW);
-        }
-        ctx.stroke();
-    },
-    fillField() {
-        for (var x = 0, cntX = Math.floor(canvas.width / spriteW); x < cntX; x++) {
-            for (var y = 0, cntY = Math.floor(canvas.height / spriteH); y < cntY; y++) {
-                drawSprite(x, y, 0, 3);
+        this.width = Math.floor(App.canvas.width / App.spriteW);
+        this.height = Math.floor(App.canvas.height / App.spriteH);
+        for (let x = 0; x < this.width; x++) {
+            this.cells[x] = [];
+            for (let y = 0; y < this.height; y++) {
+                this.cells[x][y] = App.spriteBackground;
             }
         }
     },
-    drawSprite(posX, posY, tsetX, tsetY) {
-        var outXPx = posX * spriteW,
-            outYPx = posY * spriteH,
-            tsetXPx = tsetX * spriteW,
-            tsetYPx = tsetY * spriteH
+    draw(){
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                this.drawCell(App.getPosCell(x, y), this.cells[x][y])
+                this.drawCellsPosition(App.getPosCell(x, y));
+            }
+        }
+        this.drawGrid();
+    },
+
+    drawCell(posCanvas, posTset) {
+        var posCanvasPx = App.getPosPx(posCanvas),
+            posTSetPx = App.getPosPx(posTset)
         ;
-        ctx.drawImage(tset,
-            tsetXPx, tsetYPx, spriteW, spriteH, // Что выводим (спрайт из tset)
-            outXPx, outYPx, spriteW, spriteH // Куда выводим - позиция в canvas
+        App.ctx.drawImage(App.tset,
+            posTSetPx.x, posTSetPx.y, App.spriteW, App.spriteH, // Что выводим (спрайт из tset)
+            posCanvasPx.x, posCanvasPx.y, App.spriteW, App.spriteH // Куда выводим - позиция в canvas
         );
+    },
+
+    drawGrid() {
+        App.ctx.strokeStyle = '#cccccc';
+        App.ctx.beginPath();
+        for (var x = 0; x < Math.floor(App.canvas.width / App.spriteW); x++) {
+            App.ctx.moveTo(x * App.spriteW, 0);
+            App.ctx.lineTo(x * App.spriteW, App.canvas.height);
+            App.ctx.moveTo(0, x * App.spriteW, 0);
+            App.ctx.lineTo(App.canvas.width, x * App.spriteW);
+        }
+        App.ctx.stroke();
+    },
+    drawCellsPosition(cell){
+        let cellPosPx = App.getPosPx(cell);
+        App.ctx.font = "10px Courier New";
+        App.ctx.fillStyle = "#cccccc";
+        App.ctx.fillText('' + cell.x + ':' + cell.y, cellPosPx.x, cellPosPx.y + 8);
+    },
+    setCell(posCanvas, posTSet){
+        this.cells[posCanvas.x][posCanvas.y] = posTSet;
     },
     getRoadmap(fromX, fromY, toX, toY) {
         var roadmap = [];
         for (var x = fromX; x <= toX; x++) {
             // for (var y = fromY; y <= toY; y++) {
-            //     roadmap.push(app.getSprite(x, y));
+            //     roadmap.push(App.getPosCell(x, y));
             // }
-            roadmap.push(app.getSprite(
+            roadmap.push(App.getPosCell(
                 x,
                 fromY + Math.floor((toY - fromY)/fromX + Math.floor((toX - x)/x))
             ));
         }
         return roadmap;
     },
-    drawMatrix(matrix, posX, posY) {
-        ctx.font = "12px Courier New";
-        ctx.fillStyle = "#00ff00";
+    setMatrix(matrix, posCanvas) {
         matrix.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
-                console.log('x, y', rowIndex, colIndex);
-                var outPosX = posX * spriteW + colIndex * spriteW,
-                    outPosY = posY * spriteH + rowIndex * spriteH;
-                ctx.drawImage(tset,
-                    cell.x * spriteW, cell.y * spriteH, spriteW, spriteH, // Что выводим (спрайт из tset)
-                    outPosX, outPosY, spriteW, spriteH // Куда выводим - позиция в canvas
-                );
-                ctx.fillText('' + cell.x + ':' + cell.y, outPosX, outPosY + 8);
-                ctx.fillText('' + rowIndex + ':' + colIndex, outPosX, outPosY + 24);
+                this.setCell(App.getPosCell(posCanvas.x + colIndex, posCanvas.y + rowIndex), matrix[rowIndex][colIndex]);
             })
         });
     },
     drawSprites(tsetX, tsetY, cells) {
         cells.forEach((cellPos) => {
-            drawSprite(cellPos.x, cellPos.y, tsetX, tsetY);
+            this.drawSprite(cellPos.x, cellPos.y, tsetX, tsetY);
         });
     }
 }
